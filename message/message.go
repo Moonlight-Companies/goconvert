@@ -1,8 +1,6 @@
 package message
 
-import (
-	"goconvert/convert"
-)
+import "github.com/Moonlight-Companies/goconvert/convert"
 
 func Read[T any](m map[string]interface{}, key string) (value T, ok bool) {
 	temp, ok := m[key]
