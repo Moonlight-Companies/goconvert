@@ -111,3 +111,70 @@ The `ConvertInto[T]` function supports conversions between various types, includ
 - Numeric types (int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64)
 - Strings
 - Booleans
+
+#### Validation Functions
+
+The `convert` package includes three validation functions for basic data types and sanitizing errant input for safer logging:
+
+1. `ValidateBasicFloat(txt string) (string, error)`
+2. `ValidateBasicInteger(txt string) (string, error)`
+3. `ValidateBasicText(txt string) (string, error)`
+
+These functions validate and sanitize input strings according to specific rules for each data type. They return the sanitized string and an error if any issues are encountered.
+
+##### ValidateBasicFloat
+
+Validates and sanitizes a string representation of a floating-point number.
+
+- Allows optional leading minus sign for negative numbers
+- Supports integers and floating-point numbers with optional decimal places
+- Handles numbers starting or ending with a decimal point
+- Does not allow multiple decimal points or scientific notation
+- Truncates input to 255 characters
+- Replaces invalid characters with their hexadecimal representation
+
+```go
+result, err := convert.ValidateBasicFloat("123.456")
+if err != nil {
+    fmt.Printf("Error: %v\n", err)
+} else {
+    fmt.Printf("Validated float: %s\n", result)
+}
+```
+
+##### ValidateBasicInteger
+
+Validates and sanitizes a string representation of an integer.
+
+- Allows optional leading minus sign for negative numbers
+- Supports only whole numbers (no decimal point)
+- Truncates input to 255 characters
+- Replaces invalid characters with their hexadecimal representation
+
+```go
+result, err := convert.ValidateBasicInteger("-123")
+if err != nil {
+    fmt.Printf("Error: %v\n", err)
+} else {
+    fmt.Printf("Validated integer: %s\n", result)
+}
+```
+
+##### ValidateBasicText
+
+Validates and sanitizes a string containing basic text and symbols.
+
+- Allows alphanumeric characters, spaces, and common symbols
+- Truncates input to 255 characters
+- Replaces invalid characters with their hexadecimal representation
+
+```go
+result, err := convert.ValidateBasicText("Hello, World!")
+if err != nil {
+    fmt.Printf("Error: %v\n", err)
+} else {
+    fmt.Printf("Validated text: %s\n", result)
+}
+```
+
+These validation functions are useful for ensuring input data meets specific format requirements and for sanitizing potentially malformed input for safe logging.
