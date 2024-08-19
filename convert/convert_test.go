@@ -254,7 +254,7 @@ func TestConvertInto(t *testing.T) {
 		{"string to string", stringValue, reflect.TypeOf(""), "42", true},
 
 		// Edge cases
-		{"string to int (invalid)", "not a number", reflect.TypeOf(int(0)), 0, true},
+		{"string(invalid) to int", "not a number", reflect.TypeOf(int(0)), 0, false},
 		{"overflow int8", 1000, reflect.TypeOf(int8(0)), int8(-24), true}, // 1000 % 256 = 232, which is -24 in int8
 		{"string to bool (true)", "true", reflect.TypeOf(bool(false)), true, true},
 		{"string to bool (false)", "false", reflect.TypeOf(bool(false)), false, true},

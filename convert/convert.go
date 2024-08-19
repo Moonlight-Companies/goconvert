@@ -70,9 +70,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(int(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case int8: // converting into int8
@@ -134,9 +134,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(int8(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case int16: // converting into int16
@@ -183,9 +183,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(bool); ok {
 			if v {
 				result = any(int16(1)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 		if v, ok := interfaceValue.(float32); ok {
 			result = any(int16(v)).(T)
@@ -198,9 +198,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(int16(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case int32: // converting into int32
@@ -247,9 +247,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(bool); ok {
 			if v {
 				result = any(int32(1)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 		if v, ok := interfaceValue.(float32); ok {
 			result = any(int32(v)).(T)
@@ -262,9 +262,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(int32(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case int64: // converting into int64
@@ -311,9 +311,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(bool); ok {
 			if v {
 				result = any(int64(1)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 		if v, ok := interfaceValue.(float32); ok {
 			result = any(int64(v)).(T)
@@ -326,9 +326,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(int64(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case uint: // converting into uint
@@ -390,9 +390,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(uint(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case uint8: // converting into uint8
@@ -439,9 +439,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(bool); ok {
 			if v {
 				result = any(uint8(1)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 		if v, ok := interfaceValue.(float32); ok {
 			result = any(uint8(v)).(T)
@@ -454,9 +454,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(uint8(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case uint16: // converting into uint16
@@ -503,9 +503,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(bool); ok {
 			if v {
 				result = any(uint16(1)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 		if v, ok := interfaceValue.(float32); ok {
 			result = any(uint16(v)).(T)
@@ -518,9 +518,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(uint16(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case uint32: // converting into uint32
@@ -567,9 +567,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(bool); ok {
 			if v {
 				result = any(uint32(1)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 		if v, ok := interfaceValue.(float32); ok {
 			result = any(uint32(v)).(T)
@@ -582,9 +582,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(uint32(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case uint64: // converting into uint64
@@ -631,9 +631,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(bool); ok {
 			if v {
 				result = any(uint64(1)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 		if v, ok := interfaceValue.(float32); ok {
 			result = any(uint64(v)).(T)
@@ -646,9 +646,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(uint64(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case bool: // converting into bool
@@ -810,9 +810,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(float32(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case float64: // converting into float64
@@ -874,9 +874,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 		if v, ok := interfaceValue.(string); ok {
 			if intermediate, err := strconv.ParseFloat(v, 64); err == nil {
 				result = any(float64(intermediate)).(T)
-			}
 
-			return result, true
+				return result, true
+			}
 		}
 
 	case string: // converting into string
