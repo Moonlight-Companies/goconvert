@@ -211,6 +211,7 @@ func TestMatchErrors(t *testing.T) {
 		{"[]", "a"},
 		{"[a-", "a"},
 		{"[\\", "a"},
+		{"[z-a]", "b"},
 	}
 
 	for _, tc := range errorCases {

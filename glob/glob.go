@@ -171,6 +171,9 @@ func matchChunk(chunk, s string) (rest string, ok bool, err error) {
 						return "", false, err
 					}
 				}
+				if hi < lo {
+					return "", false, ErrBadPattern
+				}
 				if lo <= r && r <= hi {
 					match = true
 				}
