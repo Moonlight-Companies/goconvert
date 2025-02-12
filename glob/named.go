@@ -6,54 +6,43 @@ import (
 )
 
 // MatchNamed reports whether text matches pattern and, if so,
-// returns a map of named glob captures. A named glob begins
-// with ':' and one or more letters (a-zA-Z). For example:
-//
-//	Pattern: "*/abc/:patterna/:patternb"
-//	Text:    "/service/example_service/abc/1/2"
-//
-// returns true with map{"patterna": "1", "patternb": "2"}.
-//
-//	Pattern: "*/abc/user:userid"
-//	Text:    "/service/example_service/abc/user123"
-//
-// returns true with map{"userid": "123"}.
-//
-// Matching is done case-insensitively.
+// returns a map of named glob captures. Named globs begin with ':' followed
+// immediately by one or more letters.
 func MatchNamed(pattern, text string) (bool, map[string]string, error) {
 	caps := make(map[string]string)
 	ok, finalCaps, err := matchHelper(pattern, text, caps)
 	if err != nil {
-		return false, nil, err
+		return false, make(map[string]string), err
+	}
+	// Ensure that on a non-match we return an empty (non-nil) map
+	if !ok && finalCaps == nil {
+		finalCaps = make(map[string]string)
 	}
 	return ok, finalCaps, nil
 }
 
-// matchHelper is a recursive matcher that processes pattern p and text t.
-// It carries along a map of captures (for named globs). It returns a boolean
-// indicating success, the (possibly updated) capture map, and an error.
+// matchHelper recursively matches pattern p against text t, carrying along the
+// capture map caps.
 func matchHelper(p, t string, caps map[string]string) (bool, map[string]string, error) {
-	// When the pattern is finished, the text must also be exhausted.
 	if p == "" {
 		return t == "", caps, nil
 	}
-	// Decode the next rune from the pattern.
 	r, size := utf8.DecodeRuneInString(p)
 	switch r {
 	case '*':
-		// Skip over any consecutive '*' characters.
+		// Skip over any consecutive '*'
 		for {
 			r2, s2 := utf8.DecodeRuneInString(p)
 			if r2 != '*' {
 				break
 			}
 			p = p[s2:]
-			// A trailing '*' matches all the rest.
+			// Trailing '*' matches the rest of t
 			if p == "" {
 				return true, caps, nil
 			}
 		}
-		// Try every possible split of t.
+		// Try every possible split of t
 		for i := 0; i <= len(t); {
 			ok, newCaps, err := matchHelper(p, t[i:], copyMap(caps))
 			if err != nil {
@@ -68,46 +57,51 @@ func matchHelper(p, t string, caps map[string]string) (bool, map[string]string, 
 			_, sz := utf8.DecodeRuneInString(t[i:])
 			i += sz
 		}
-		return false, nil, nil
+		return false, copyMap(caps), nil
 
 	case '?':
-		// '?' must match a single rune.
 		if t == "" {
-			return false, nil, nil
+			return false, copyMap(caps), nil
 		}
 		_, tsz := utf8.DecodeRuneInString(t)
 		return matchHelper(p[size:], t[tsz:], caps)
 
 	case '[':
-		// Delegate character class matching.
+		// Always validate the character class syntax by calling matchCharClass with a dummy rune.
+		_, _, err := matchCharClass(p, 0)
+		if err != nil {
+			return false, nil, err
+		}
 		if t == "" {
-			return false, nil, nil
+			return false, copyMap(caps), nil
 		}
 		tr, tsz := utf8.DecodeRuneInString(t)
 		ok, rest, err := matchCharClass(p, tr)
-		if err != nil || !ok {
+		if err != nil {
 			return false, nil, err
+		}
+		if !ok {
+			return false, copyMap(caps), nil
 		}
 		return matchHelper(rest, t[tsz:], caps)
 
 	case '\\':
-		// '\' escapes the next rune.
 		p = p[size:]
 		if p == "" {
 			return false, nil, ErrBadPattern
 		}
 		rEsc, escSize := utf8.DecodeRuneInString(p)
 		if t == "" {
-			return false, nil, nil
+			return false, copyMap(caps), nil
 		}
 		tr, tsz := utf8.DecodeRuneInString(t)
 		if unicode.ToUpper(rEsc) != unicode.ToUpper(tr) {
-			return false, nil, nil
+			return false, copyMap(caps), nil
 		}
 		return matchHelper(p[escSize:], t[tsz:], caps)
 
 	case ':':
-		// Check if a named glob follows.
+		// Check if this is a named glob (':' followed by one or more letters)
 		temp := p[size:]
 		nameRunes := []rune{}
 		totalConsumed := 0
@@ -121,11 +115,10 @@ func matchHelper(p, t string, caps map[string]string) (bool, map[string]string, 
 				break
 			}
 		}
-		// If at least one letter was consumed, treat it as a named glob.
+		// If valid named glob, try every possible split for the capture.
 		if len(nameRunes) > 0 {
 			name := string(nameRunes)
 			pRest := p[size+totalConsumed:]
-			// Try every possible split of t for the capture.
 			for i := 0; i <= len(t); {
 				newCaps := copyMap(caps)
 				newCaps[name] = t[:i]
@@ -142,35 +135,34 @@ func matchHelper(p, t string, caps map[string]string) (bool, map[string]string, 
 				_, sz := utf8.DecodeRuneInString(t[i:])
 				i += sz
 			}
-			return false, nil, nil
+			return false, copyMap(caps), nil
 		}
-		// If not a valid named glob, treat ':' as a literal.
+		// Otherwise, treat ':' as a literal.
 		if t == "" {
-			return false, nil, nil
+			return false, copyMap(caps), nil
 		}
 		tr, tsz := utf8.DecodeRuneInString(t)
 		if unicode.ToUpper(r) != unicode.ToUpper(tr) {
-			return false, nil, nil
+			return false, copyMap(caps), nil
 		}
 		return matchHelper(p[size:], t[tsz:], caps)
 
 	default:
-		// Match a literal character.
+		// Literal character match.
 		if t == "" {
-			return false, nil, nil
+			return false, copyMap(caps), nil
 		}
 		tr, tsz := utf8.DecodeRuneInString(t)
 		if unicode.ToUpper(r) != unicode.ToUpper(tr) {
-			return false, nil, nil
+			return false, copyMap(caps), nil
 		}
 		return matchHelper(p[size:], t[tsz:], caps)
 	}
 }
 
-// matchCharClass processes a character class from p (which is expected
-// to begin with '[') and tests whether ch is in that class. It returns a
-// boolean indicating the match, the remaining pattern after the class, and
-// an error if the syntax is bad.
+// matchCharClass processes a character class starting with '[' in p and tests
+// whether ch is in that class. If p is malformed (for example, missing a closing
+// ']'), ErrBadPattern is returned.
 func matchCharClass(p string, ch rune) (bool, string, error) {
 	if p == "" || p[0] != '[' {
 		return false, "", ErrBadPattern
@@ -211,7 +203,7 @@ func matchCharClass(p string, ch rune) (bool, string, error) {
 			p = p[sz:]
 		}
 		hi := lo
-		// If a '-' follows, then treat as a range.
+		// If a '-' follows, treat it as a range.
 		if p != "" {
 			r2, sz2 := utf8.DecodeRuneInString(p)
 			if r2 == '-' {
@@ -237,8 +229,8 @@ func matchCharClass(p string, ch rune) (bool, string, error) {
 			}
 		}
 		nrange++
-		// If ch falls within [lo,hi] (case-insensitively), mark it.
-		if unicode.ToUpper(lo) <= unicode.ToUpper(ch) && unicode.ToUpper(ch) <= unicode.ToUpper(hi) {
+		// For dummy ch==0 we ignore matching; otherwise do case‑insensitive comparison.
+		if ch != 0 && unicode.ToUpper(lo) <= unicode.ToUpper(ch) && unicode.ToUpper(ch) <= unicode.ToUpper(hi) {
 			matched = true
 		}
 	}
@@ -248,7 +240,7 @@ func matchCharClass(p string, ch rune) (bool, string, error) {
 	return matched, p, nil
 }
 
-// copyMap returns a shallow copy of the map.
+// copyMap makes a shallow copy of a map.
 func copyMap(m map[string]string) map[string]string {
 	nm := make(map[string]string, len(m))
 	for k, v := range m {

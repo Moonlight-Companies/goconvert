@@ -1,14 +1,10 @@
 package glob
 
 import (
-	"errors"
 	"strings"
 	"unicode"
 	"unicode/utf8"
 )
-
-// ErrBadPattern indicates a pattern was malformed.
-var ErrBadPattern = errors.New("syntax error in pattern")
 
 func splitWords(name string) []string {
 	return strings.FieldsFunc(name, func(r rune) bool {

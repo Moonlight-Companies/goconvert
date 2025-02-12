@@ -100,7 +100,7 @@ func TestMatchNamed(t *testing.T) {
 			if matched != tc.expectedMatch {
 				t.Errorf("Pattern %q with text %q: expected match %v, got %v", tc.pattern, tc.text, tc.expectedMatch, matched)
 			}
-			if matched && !reflect.DeepEqual(caps, tc.expectedCaps) {
+			if !reflect.DeepEqual(caps, tc.expectedCaps) {
 				t.Errorf("Pattern %q with text %q: expected captures %#v, got %#v", tc.pattern, tc.text, tc.expectedCaps, caps)
 			}
 		})
