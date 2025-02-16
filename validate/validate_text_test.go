@@ -20,6 +20,7 @@ func TestValidateBasicText(t *testing.T) {
 		{"Too long text", strings.Repeat("a", 256), strings.Repeat("a", 255) + "...", true},
 		{"Long with invalid", strings.Repeat("a", 254) + "\n", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...", true},
 		{"Empty string", "", "", false},
+		{"Numeric 0, 1, 2, 3, 4, 5, 6, 7, 8, 9", "0123456789", "0123456789", false},
 
 		// Unicode handling
 		{"ASCII extended", "café", "caf<0xC3><0xA9>", true},
@@ -38,6 +39,7 @@ func TestValidateBasicText(t *testing.T) {
 		{"All allowed symbols", "!@#$%^&*()-_/\\?", "!@#$%^&*()-_/\\?", false},
 		{"Mixed spaces", "a b\tc\rd\ne", "a b<0x09>c<0x0D>d<0x0A>e", true},
 		{"Binary data", "\x00\x01\x02\x03", "<0x00><0x01><0x02><0x03>", true},
+		{"Invalid ASCII", "a\x80b", "a<0x80>b", true},
 
 		// Multiple replacements
 		{"Multiple Unicode", "漢字漢字", "<0xE6><0xBC><0xA2><0xE5><0xAD><0x97><0xE6><0xBC><0xA2><0xE5><0xAD><0x97>", true},

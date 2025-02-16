@@ -3,14 +3,38 @@ package validate
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 )
+
+func isAllowed(b byte) bool {
+	// Letters and numbers
+	if (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z') || (b >= '0' && b <= '9') {
+		return true
+	}
+
+	// Whitespace - only space, no tabs or newlines
+	if b == ' ' {
+		return true
+	}
+
+	// Safe punctuation and symbols
+	switch b {
+	case '.', ',', ':', ';', // Basic punctuation
+		'!', '?', // Sentence endings
+		'\'', '"', // Quotes
+		'(', ')', '[', ']', '{', '}', // Brackets
+		'+', '-', '*', '/', '=', // Math operators
+		'@', '#', '$', '%', '^', '&', // Common symbols
+		'_', '~', '`', '\\', '|', '<', '>': // Other safe characters
+		return true
+	default:
+		return false
+	}
+}
 
 func ValidateBasicText(txt string) (string, error) {
 	var sanitized strings.Builder
 	var invalidChars bool
-	regex := regexp.MustCompile(`^[ a-zA-Z!@#$%^&*()-_/\\?]$`)
 
 	// Convert string to bytes
 	bytes := []byte(txt)
@@ -21,7 +45,7 @@ func ValidateBasicText(txt string) (string, error) {
 
 	for i < len(bytes) {
 		// Check what the next chunk would be
-		isValid := regex.MatchString(string(rune(bytes[i])))
+		isValid := isAllowed(bytes[i])
 		nextLen := 1
 		if !isValid {
 			nextLen = 6 // <0xXX>
