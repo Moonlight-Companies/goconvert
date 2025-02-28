@@ -657,6 +657,16 @@ func TestConvertIntoTime_24hFormats(t *testing.T) {
 			input: "Jan 02 2006 13:04",
 			want:  time.Date(2006, time.January, 2, 13, 4, 0, 0, time.UTC),
 		},
+		{
+			name:  "24h format (non zero-padded day)",
+			input: "Jan 2 2006 13:04:05",
+			want:  time.Date(2006, time.January, 2, 13, 4, 5, 0, time.UTC),
+		},
+		{
+			name:  "24h format (zero padded day)",
+			input: "Jan 02 2006 13:04:05",
+			want:  time.Date(2006, time.January, 2, 13, 4, 5, 0, time.UTC),
+		},
 	}
 
 	for _, tc := range testCases {

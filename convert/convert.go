@@ -954,6 +954,8 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 				"Jan 02 2006 3:04 PM",           // Mon DD YYYY HH:MM PM
 				"Jan 2 2006 15:04",              // Mon DD YYYY HH:MM
 				"Jan 02 2006 15:04",             // Mon DD YYYY HH:MM
+				"Jan 2 2006 15:04:05",           // Mon DD YYYY HH:MM:SS
+				"Jan 02 2006 15:04:05",          // Mon DD YYYY HH:MM:SS
 				"2006-01-02T15:04:05Z07:00",     // RFC3339
 				"2006-01-02T15:04:05.999Z07:00", // RFC3339Nano
 				"1/2/2006",                      // M/D/YYYY
