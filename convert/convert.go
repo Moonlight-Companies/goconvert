@@ -978,12 +978,9 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 			}
 
 			for _, format := range dateFormats {
-				fmt.Println("TRYING", format)
 				if parsedTime, err := time.Parse(format, v); err == nil {
 					result = any(parsedTime).(T)
 					return result, true
-				} else {
-					fmt.Println("FAILED", format, err)
 				}
 			}
 
