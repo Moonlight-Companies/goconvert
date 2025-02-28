@@ -950,6 +950,7 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 			// Common date formats to try
 			dateFormats := []string{
 				"2006-01-02",                    // YYYY-MM-DD
+				"Jan 02 2006 3:04 PM",           // Mon DD YYYY HH:MM PM
 				"2006-01-02T15:04:05Z07:00",     // RFC3339
 				"2006-01-02T15:04:05.999Z07:00", // RFC3339Nano
 				"1/2/2006",                      // M/D/YYYY
