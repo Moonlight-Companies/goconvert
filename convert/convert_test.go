@@ -421,6 +421,11 @@ func TestConvertIntoTimeHTTPFormats(t *testing.T) {
 			"Mon May 15 14:30:45 2023",
 			time.Date(2023, 5, 15, 14, 30, 45, 0, time.UTC),
 		},
+		{
+			"Custom",
+			"May 15 2023 2:30 PM",
+			time.Date(2023, 5, 15, 14, 30, 0, 0, time.UTC),
+		},
 	}
 
 	for _, tt := range httpDateFormats {

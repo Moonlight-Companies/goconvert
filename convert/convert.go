@@ -950,6 +950,7 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 			// Common date formats to try
 			dateFormats := []string{
 				"2006-01-02",                    // YYYY-MM-DD
+				"Jan 2 2006 3:04 PM",            // Mon DD YYYY HH:MM PM
 				"Jan 02 2006 3:04 PM",           // Mon DD YYYY HH:MM PM
 				"2006-01-02T15:04:05Z07:00",     // RFC3339
 				"2006-01-02T15:04:05.999Z07:00", // RFC3339Nano
@@ -977,9 +978,12 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 			}
 
 			for _, format := range dateFormats {
+				fmt.Println("TRYING", format)
 				if parsedTime, err := time.Parse(format, v); err == nil {
 					result = any(parsedTime).(T)
 					return result, true
+				} else {
+					fmt.Println("FAILED", format, err)
 				}
 			}
 
