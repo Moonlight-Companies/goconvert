@@ -639,3 +639,36 @@ func TestConvertIntoTime_JulianDays(t *testing.T) {
 		})
 	}
 }
+
+// TestConvertIntoTime_24hFormats tests the 24-hour formats with both non-zero-padded and zero-padded day values.
+func TestConvertIntoTime_24hFormats(t *testing.T) {
+	testCases := []struct {
+		name  string
+		input string
+		want  time.Time
+	}{
+		{
+			name:  "24h format (non zero-padded day)",
+			input: "Jan 2 2006 13:04",
+			want:  time.Date(2006, time.January, 2, 13, 4, 0, 0, time.UTC),
+		},
+		{
+			name:  "24h format (zero padded day)",
+			input: "Jan 02 2006 13:04",
+			want:  time.Date(2006, time.January, 2, 13, 4, 0, 0, time.UTC),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, ok := ConvertInto[time.Time](tc.input)
+			if !ok {
+				t.Errorf("ConvertInto() failed to parse input %q", tc.input)
+				return
+			}
+			if !got.Equal(tc.want) {
+				t.Errorf("ConvertInto() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}

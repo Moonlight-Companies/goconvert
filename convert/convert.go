@@ -952,6 +952,8 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 				"2006-01-02",                    // YYYY-MM-DD
 				"Jan 2 2006 3:04 PM",            // Mon DD YYYY HH:MM PM
 				"Jan 02 2006 3:04 PM",           // Mon DD YYYY HH:MM PM
+				"Jan 2 2006 15:04",              // Mon DD YYYY HH:MM
+				"Jan 02 2006 15:04",             // Mon DD YYYY HH:MM
 				"2006-01-02T15:04:05Z07:00",     // RFC3339
 				"2006-01-02T15:04:05.999Z07:00", // RFC3339Nano
 				"1/2/2006",                      // M/D/YYYY
@@ -981,6 +983,8 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 				if parsedTime, err := time.Parse(format, v); err == nil {
 					result = any(parsedTime).(T)
 					return result, true
+				} else {
+					fmt.Println("ERROR", v, format, err)
 				}
 			}
 
