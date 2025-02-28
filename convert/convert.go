@@ -985,7 +985,34 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 			}
 
 			// Try to parse integer timestamp
+			// note we have some special cases for julian days
+			//
+			// Check if this is a julian day of year include negative values -365..0: delta from today
+			// or positive values 1..365: julian day of current year
+			// or 0: Dec 31 of previous year
+			//
 			if timestamp, err := strconv.ParseInt(v, 10, 64); err == nil {
+				// Check if this is julian day of year
+				if timestamp < 0 && timestamp >= -365 {
+					// Convert to time.Time by adding the offset to today
+					now := time.Now()
+					result = any(now.AddDate(0, 0, int(timestamp))).(T)
+					return result, true
+				}
+				// Check if this is julian day of year (0-365)
+				if timestamp >= 0 && timestamp <= 365 {
+					// Find the julian day of year
+					year := time.Now().Year()
+					// Convert julian day to time (day 1 = Jan 1, day 2 = Jan 2, etc.)
+					// Adjust for day 0 if needed (interpret as Dec 31 of previous year)
+					if timestamp == 0 {
+						result = any(time.Date(year-1, 12, 31, 0, 0, 0, 0, time.UTC)).(T)
+					} else {
+						result = any(time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC).AddDate(0, 0, int(timestamp)-1)).(T)
+					}
+					return result, true
+				}
+
 				// Check if this might be a JavaScript millisecond timestamp
 				if timestamp > 1000000000000 { // Timestamps after 2001 in milliseconds are > 10^12
 					result = any(time.Unix(timestamp/1000, (timestamp%1000)*1000000)).(T)

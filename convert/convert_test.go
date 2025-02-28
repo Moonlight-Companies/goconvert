@@ -567,3 +567,75 @@ func TestBoolConversion(t *testing.T) {
 		t.Logf("Input: false, Result: %v, Ok: %v", falseResult, falseOk)
 	})
 }
+
+// TestConvertIntoTime_JulianDays tests the special time.Time conversion for julian day strings.
+// Negative values (from -365 to -1) are interpreted as today minus N days.
+// Zero is interpreted as December 31 of the previous year.
+// Positive values (1 to 365) are interpreted as the Nth day of the current year.
+func TestConvertIntoTime_JulianDays(t *testing.T) {
+	// Capture the current year so that expected values remain relative.
+	currentYear := time.Now().Year()
+
+	// Define test cases.
+	// We use a function for the expected value so that for negative offsets we can capture a reference "now".
+	tests := []struct {
+		name     string
+		input    string
+		expected func(ref time.Time) time.Time
+	}{
+		{
+			name:  "Negative 7 days: today minus 7",
+			input: "-7",
+			expected: func(ref time.Time) time.Time {
+				// Note: since ConvertInto calls time.Now(), we compare only year, month, day.
+				return ref.AddDate(0, 0, -7)
+			},
+		},
+		{
+			name:  "Zero: Dec 31 of previous year",
+			input: "0",
+			expected: func(_ time.Time) time.Time {
+				return time.Date(currentYear-1, time.December, 31, 0, 0, 0, 0, time.UTC)
+			},
+		},
+		{
+			name:  "Positive 1: Jan 1 of current year",
+			input: "1",
+			expected: func(_ time.Time) time.Time {
+				return time.Date(currentYear, time.January, 1, 0, 0, 0, 0, time.UTC)
+			},
+		},
+		{
+			name:  "Positive 365: Dec 31 of current year",
+			input: "365",
+			expected: func(_ time.Time) time.Time {
+				// Day 1 is Jan 1, so day 365 is Jan 1 + 364 days.
+				return time.Date(currentYear, time.January, 1, 0, 0, 0, 0, time.UTC).AddDate(0, 0, 364)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Capture a reference time that we can use for comparison.
+			refNow := time.Now()
+
+			got, ok := ConvertInto[time.Time](tc.input)
+			if !ok {
+				t.Fatalf("Conversion failed for input %s", tc.input)
+			}
+
+			exp := tc.expected(refNow)
+			// Since the conversion for negative values depends on time.Now(),
+			// compare only the date components (year, month, day).
+			if got.Year() != exp.Year() || got.Month() != exp.Month() || got.Day() != exp.Day() {
+				t.Errorf("For input %q, expected date %s, got %s",
+					tc.input,
+					exp.Format("2006-01-02"),
+					got.Format("2006-01-02"))
+			} else {
+				t.Logf("Success: input %q yielded %s", tc.input, got.Format("2006-01-02"))
+			}
+		})
+	}
+}
