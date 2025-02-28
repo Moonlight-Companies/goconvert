@@ -1,8 +1,10 @@
 package convert
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestConvertInto(t *testing.T) {
@@ -317,4 +319,246 @@ func TestConvertIntoUnsupportedType(t *testing.T) {
 	if ok {
 		t.Errorf("Expected conversion to unsupported type to fail")
 	}
+}
+
+func TestConvertIntoTimeTime(t *testing.T) {
+	// Reference times for testing
+	referenceTime := time.Date(2023, 5, 15, 14, 30, 45, 0, time.UTC)
+	unixTime := time.Date(2023, 5, 15, 14, 30, 45, 0, time.UTC).Unix()
+	unixTimeFloat := float64(unixTime) + 0.5 // with fractional seconds
+
+	testCases := []struct {
+		name   string
+		input  interface{}
+		want   time.Time
+		wantOk bool
+	}{
+		// Direct time.Time conversion
+		{"time.Time to time.Time", referenceTime, referenceTime, true},
+
+		// String format conversions
+		{"ISO8601 to time.Time", "2023-05-15T14:30:45Z", referenceTime, true},
+		{"YYYY-MM-DD to time.Time", "2023-05-15", time.Date(2023, 5, 15, 0, 0, 0, 0, time.UTC), true},
+		{"MM/DD/YYYY to time.Time", "05/15/2023", time.Date(2023, 5, 15, 0, 0, 0, 0, time.UTC), true},
+		{"MMDDYYYY to time.Time", "05152023", time.Date(2023, 5, 15, 0, 0, 0, 0, time.UTC), true},
+		{"RFC3339 to time.Time", "2023-05-15T14:30:45Z", referenceTime, true},
+		{"RFC1123 to time.Time", "Mon, 15 May 2023 14:30:45 UTC", referenceTime, true},
+
+		// Integer timestamp conversions
+		{"int to time.Time", int(unixTime), time.Unix(unixTime, 0), true},
+		{"int64 to time.Time", int64(unixTime), time.Unix(unixTime, 0), true},
+		{"string Unix timestamp to time.Time", fmt.Sprintf("%d", unixTime), time.Unix(unixTime, 0), true},
+
+		// Float timestamp conversions (with fractional seconds)
+		{"float64 to time.Time", unixTimeFloat, time.Unix(unixTime, int64(0.5*1e9)), true},
+		{"float32 to time.Time", float32(unixTimeFloat), time.Unix(unixTime, int64(0.5*1e9)), false},
+		{"string float timestamp to time.Time", fmt.Sprintf("%f", unixTimeFloat), time.Unix(unixTime, int64(0.5*1e9)), true},
+
+		// Edge cases
+		{"invalid string to time.Time", "not a date", time.Time{}, false},
+		{"empty string to time.Time", "", time.Time{}, false},
+		{"nil to time.Time", nil, time.Time{}, false},
+		{"bool to time.Time", true, time.Time{}, false},
+
+		// Additional formats
+		{"DD-Mon-YYYY to time.Time", "15-May-2023", time.Date(2023, 5, 15, 0, 0, 0, 0, time.UTC), true},
+		{"Month D, YYYY to time.Time", "May 15, 2023", time.Date(2023, 5, 15, 0, 0, 0, 0, time.UTC), true},
+		{"YYYY/MM/DD to time.Time", "2023/05/15", time.Date(2023, 5, 15, 0, 0, 0, 0, time.UTC), true},
+
+		// JavaScript-style millisecond timestamp
+		{"JavaScript millisecond timestamp string", fmt.Sprintf("%d", unixTime*1000), time.Unix(unixTime, 0), true},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := ConvertInto[time.Time](tt.input)
+
+			if ok != tt.wantOk {
+				t.Errorf("ConvertInto() ok = %v, wantOk %v", ok, tt.wantOk)
+				return
+			}
+
+			if tt.wantOk {
+				// For successful conversions, check if times are equal within a reasonable tolerance
+				// This is important especially for floating point timestamp conversions
+				if !timesApproximatelyEqual(got, tt.want) {
+					t.Errorf("ConvertInto() = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+// Helper function to compare times with a small tolerance for floating point imprecision
+func timesApproximatelyEqual(a, b time.Time) bool {
+	diff := a.Sub(b)
+	if diff < 0 {
+		diff = -diff
+	}
+	return diff < 10*time.Millisecond // Allow 10ms of tolerance
+}
+
+// Test for common date formats used in HTTP headers
+func TestConvertIntoTimeHTTPFormats(t *testing.T) {
+	httpDateFormats := []struct {
+		format string
+		date   string
+		want   time.Time
+	}{
+		// HTTP date formats
+		{
+			"RFC1123",
+			"Mon, 15 May 2023 14:30:45 GMT",
+			time.Date(2023, 5, 15, 14, 30, 45, 0, time.UTC),
+		},
+		{
+			"RFC850",
+			"Monday, 15-May-23 14:30:45 GMT",
+			time.Date(2023, 5, 15, 14, 30, 45, 0, time.UTC),
+		},
+		{
+			"ANSI C",
+			"Mon May 15 14:30:45 2023",
+			time.Date(2023, 5, 15, 14, 30, 45, 0, time.UTC),
+		},
+	}
+
+	for _, tt := range httpDateFormats {
+		t.Run(tt.format, func(t *testing.T) {
+			got, ok := ConvertInto[time.Time](tt.date)
+			if !ok {
+				t.Errorf("ConvertInto() failed to parse %s", tt.date)
+				return
+			}
+
+			if !timesApproximatelyEqual(got, tt.want) {
+				t.Errorf("ConvertInto() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// Test for handling of edge cases with timezone information
+func TestConvertIntoTimeWithTimezones(t *testing.T) {
+	timezone := []struct {
+		name  string
+		input string
+		want  time.Time
+	}{
+		{
+			"EST timezone",
+			"2023-05-15T09:30:45-05:00",
+			time.Date(2023, 5, 15, 14, 30, 45, 0, time.UTC), // This is the UTC equivalent
+		},
+		{
+			"JST timezone",
+			"2023-05-15T23:30:45+09:00",
+			time.Date(2023, 5, 15, 14, 30, 45, 0, time.UTC), // This is the UTC equivalent
+		},
+		{
+			"Z timezone explicit",
+			"2023-05-15T14:30:45Z",
+			time.Date(2023, 5, 15, 14, 30, 45, 0, time.UTC),
+		},
+	}
+
+	for _, tt := range timezone {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := ConvertInto[time.Time](tt.input)
+			if !ok {
+				t.Errorf("ConvertInto() failed to parse %s", tt.input)
+				return
+			}
+
+			// Convert to UTC for comparison if needed
+			gotUTC := got.UTC()
+
+			if !timesApproximatelyEqual(gotUTC, tt.want) {
+				t.Errorf("ConvertInto() = %v, want %v", gotUTC, tt.want)
+			}
+		})
+	}
+}
+
+// Test for JavaScript-style millisecond timestamps
+func TestConvertIntoTimeJavaScriptTimestamps(t *testing.T) {
+	unixTime := time.Date(2023, 5, 15, 14, 30, 45, 0, time.UTC).Unix()
+	jsTimestamp := unixTime * 1000 // JavaScript uses milliseconds
+
+	testCases := []struct {
+		name  string
+		input interface{}
+		want  time.Time
+	}{
+		{
+			"int64 JavaScript timestamp",
+			int64(jsTimestamp),
+			time.Unix(unixTime, 0),
+		},
+		{
+			"float64 JavaScript timestamp",
+			float64(jsTimestamp),
+			time.Unix(unixTime, 0),
+		},
+		{
+			"string JavaScript timestamp",
+			fmt.Sprintf("%d", jsTimestamp),
+			time.Unix(unixTime, 0),
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			// We need to implement JavaScript timestamp detection in our converter
+			// This test may initially fail until we add that functionality
+			got, ok := ConvertInto[time.Time](tt.input)
+			if !ok {
+				t.Errorf("ConvertInto() failed to parse JavaScript timestamp: %v", tt.input)
+				return
+			}
+
+			if !timesApproximatelyEqual(got, tt.want) {
+				t.Errorf("ConvertInto() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBoolConversion(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    bool
+		expected bool
+	}{
+		{"true to bool", true, true},    // expect true -> true
+		{"false to bool", false, false}, // expect false -> false
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, ok := ConvertInto[bool](tc.input)
+
+			if !ok {
+				t.Errorf("ConvertInto[bool](%v) returned ok=false, expected ok=true", tc.input)
+			}
+
+			if result != tc.expected {
+				t.Errorf("ConvertInto[bool](%v) returned %v, expected %v",
+					tc.input, result, tc.expected)
+			}
+		})
+	}
+
+	// Also test direct tracing of the code path to confirm behavior
+	t.Run("direct logic trace", func(t *testing.T) {
+		// Testing true input
+		trueInput := true
+		trueResult, trueOk := ConvertInto[bool](trueInput)
+		t.Logf("Input: true, Result: %v, Ok: %v", trueResult, trueOk)
+
+		// Testing false input
+		falseInput := false
+		falseResult, falseOk := ConvertInto[bool](falseInput)
+		t.Logf("Input: false, Result: %v, Ok: %v", falseResult, falseOk)
+	})
 }
