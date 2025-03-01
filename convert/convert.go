@@ -985,8 +985,6 @@ func ConvertInto[T any](interfaceValue interface{}) (result T, ok bool) {
 				if parsedTime, err := time.Parse(format, v); err == nil {
 					result = any(parsedTime).(T)
 					return result, true
-				} else {
-					fmt.Println("ERROR", v, format, err)
 				}
 			}
 
